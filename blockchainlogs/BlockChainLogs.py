@@ -65,13 +65,10 @@ class BlockChainLogs:
         self._check_or_create_dir(path=self._dir_for_logs + dir_year + dir_month + dir_day)
         dir_current = self._dir_for_logs+dir_year+dir_month+dir_day
 
-        files = os.listdir(dir_current)
-        files = sorted([float(file) for file in files])
-        print(f"files = {files}")
+        files = self._get_files_in_dir(path=dir_current)
 
         if len(files):
             last_file = files[-1]
-            print(f"last = {last_file}")
             prev_hash = self.get_hash_file(file_name=dir_current + '/' + str(last_file))
         else:
             prev_hash = "0000000000000"
@@ -83,9 +80,49 @@ class BlockChainLogs:
             "data": data,
         }
 
-        with open(dir_current + '/' + str(now_time), mode="w") as file:
+        with open(file=dir_current + '/' + str(now_time), mode="w") as file:
             json.dump(data, file, indent=4, ensure_ascii=False)
 
+    def check_block(self, file_path: str = "") -> bool:
+        """
+
+        :param file_path:
+        :return:
+        """
+        self._error = ''
+        try:
+            path = self._remove_slashes(path=file_path)
+            if os.path.exists(path=path) is False:
+                self._error = f"(!!) This block not Exist!! Path = {path}."
+                return False
+            path = path[:path.rfind('/')]
+            files = self._get_files_in_dir(path=path)
+            if len(files) == 1:
+                print("One file")
+            else:
+                print("files = ", files)
+                print("type = ", type(files[0]))
+                print("file_path = ", file_path)
+                print("file_path[] = ", file_path[file_path.rfind('/')+1:])
+                ind = files.index(file_path[file_path.rfind('/')+1:])
+                print(f"ind = {ind}")
+                file_prev = path + '/' + files[ind-1]
+                print(f"file_prev = {file_prev}")
+                hash_prev_file = self.get_hash_file(file_name=file_prev)
+                print(f"hash_prev_file = {hash_prev_file}")
+                hash_prev_from_current_block = ''
+                with open(file=file_path, mode="rb") as file:
+                    hash_prev_from_current_block = json.load(file)['hash']
+                if hash_prev_file == hash_prev_from_current_block:
+                    return True
+                else:
+                    return False
+        except Exception as err:
+            self._error = err
+            return False
+
+    def check_all_blocks(self):
+        pass
     # ###################### SERVICE___BEGIN ######################
 
     @staticmethod
@@ -119,5 +156,15 @@ class BlockChainLogs:
                 os.mkdir(path)
         except Exception as err:
             self._error = err
+
+    @staticmethod
+    def _get_files_in_dir(path: str = "") -> list():
+        """
+
+        :param path:
+        :return:
+        """
+        files = os.listdir(path)
+        return sorted([file for file in files])
 
     # ###################### SERVICE___END ######################
