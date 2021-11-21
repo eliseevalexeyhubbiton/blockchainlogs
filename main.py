@@ -1,3 +1,5 @@
+from blockchainlogs import BlockChainLogs
+
 
 def process() -> None:
     """
