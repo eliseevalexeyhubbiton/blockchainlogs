@@ -1,21 +1,18 @@
 import os
 import json
-import hashlib
 import time
+import hashlib
+import datetime
 
 
 class BlockChainLogs:
     _error = ""
     _dir_for_logs = ""
-    _files_template_for_logs = ""
 
-    def __init__(self, dir_logs: str = "", files_logs: str = "") -> None:
+    def __init__(self, dir_logs: str = "") -> None:
         if bool(dir_logs) is False:
             dir_logs = os.getcwd()+"/logs"
         self.dir_logs(dir_logs=dir_logs)
-        if bool(files_logs) is False:
-            files_logs = ""
-        self.files_template_logs(files_logs=files_logs)
         if os.path.exists(dir_logs) is True:
             if os.path.isdir(dir_logs) is False:
                 os.remove(dir_logs)
@@ -41,18 +38,6 @@ class BlockChainLogs:
         else:
             return self._dir_for_logs
 
-    def files_template_logs(self, files_logs: str = "") -> str:
-        """
-        GET or SET for dir_for_logs.
-        :param files_logs: if files_logs != '' then GET else SET.
-        :return: if GET to dir_for_logs else SET.
-        """
-        if bool(files_logs) is True:
-            self._files_template_for_logs = self._remove_slashes(path=files_logs)
-            return ""
-        else:
-            return self._files_template_for_logs
-
     def get_hash_file(self, file_name: str = "") -> str:
         """
         GET hash 'file_name'.
@@ -71,12 +56,23 @@ class BlockChainLogs:
             return ''
 
     def add_block(self, data=None, ) -> None:
-        files = os.listdir(self._dir_for_logs)
+        today = datetime.date.today()
+        dir_year = '/' + today.strftime('%Y')
+        self._check_or_create_dir(path=self._dir_for_logs + dir_year)
+        dir_month = '/' + today.strftime('%m')
+        self._check_or_create_dir(path=self._dir_for_logs + dir_year + dir_month)
+        dir_day = '/' + today.strftime('%d')
+        self._check_or_create_dir(path=self._dir_for_logs + dir_year + dir_month + dir_day)
+        dir_current = self._dir_for_logs+dir_year+dir_month+dir_day
+
+        files = os.listdir(dir_current)
         files = sorted([float(file) for file in files])
+        print(f"files = {files}")
 
         if len(files):
             last_file = files[-1]
-            prev_hash = self.get_hash_file(file_name=str(last_file))
+            print(f"last = {last_file}")
+            prev_hash = self.get_hash_file(file_name=dir_current + '/' + str(last_file))
         else:
             prev_hash = "0000000000000"
 
@@ -87,7 +83,7 @@ class BlockChainLogs:
             "data": data,
         }
 
-        with open(self._dir_for_logs + str(now_time), mode="w") as file:
+        with open(dir_current + '/' + str(now_time), mode="w") as file:
             json.dump(data, file, indent=4, ensure_ascii=False)
 
     # ###################### SERVICE___BEGIN ######################
@@ -103,8 +99,25 @@ class BlockChainLogs:
             return ""
         while path.rfind('/') == (len(path) - 1):
             path = path[:-1]
-        while path.find('/') == 1:
+        while path.find('/') == 0:
             path = path[1:]
         return '/' + path
+
+    def _check_or_create_dir(self, path: str = "") -> None:
+        """
+
+        :param path:
+        :return:
+        """
+        self._error = ''
+        path = self._remove_slashes(path=path)
+        try:
+            if os.path.exists(path) is True:
+                if os.path.isdir(path) is False:
+                    os.remove(path)
+            else:
+                os.mkdir(path)
+        except Exception as err:
+            self._error = err
 
     # ###################### SERVICE___END ######################
