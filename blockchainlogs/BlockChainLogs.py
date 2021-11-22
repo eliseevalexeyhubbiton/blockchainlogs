@@ -4,6 +4,8 @@ import time
 import hashlib
 import datetime
 
+from pprint import pprint
+
 
 class BlockChainLogs:
     _error = ""
@@ -91,32 +93,64 @@ class BlockChainLogs:
         """
         self._error = ''
         try:
+            # check exist file
             path = self._remove_slashes(path=file_path)
             if os.path.exists(path=path) is False:
                 self._error = f"(!!) This block not Exist!! Path = {path}."
                 return False
-            path = path[:path.rfind('/')]
-            files = self._get_files_in_dir(path=path)
-            if len(files) == 1:
-                print("One file")
-            else:
-                print("files = ", files)
-                print("type = ", type(files[0]))
-                print("file_path = ", file_path)
-                print("file_path[] = ", file_path[file_path.rfind('/')+1:])
-                ind = files.index(file_path[file_path.rfind('/')+1:])
-                print(f"ind = {ind}")
-                file_prev = path + '/' + files[ind-1]
-                print(f"file_prev = {file_prev}")
-                hash_prev_file = self.get_hash_file(file_name=file_prev)
-                print(f"hash_prev_file = {hash_prev_file}")
-                hash_prev_from_current_block = ''
-                with open(file=file_path, mode="rb") as file:
-                    hash_prev_from_current_block = json.load(file)['hash']
-                if hash_prev_file == hash_prev_from_current_block:
-                    return True
-                else:
+            # check first block or not
+            with open(file=path, mode="rb") as file:
+                if json.load(file)['hash'] == "0000000000000":
+                    self._error = "(!!) This First Block!!"
                     return False
+
+            # get list files in dir where checking files
+            path_dir = path[:path.rfind('/')]
+            files = self._get_files_in_dir(path=path_dir)
+
+            # Check file one or first in dir
+            print(f"path = {path}")
+            print(f"path_dir = {path_dir}")
+            if len(files) == 1 or files.index(path[len(path_dir)+1:]) == 0:
+                file_prev = ''
+                finder = {
+                    "main_dir": path_dir,
+                    "current_dir": path_dir,
+                    "current_dir_title": path_dir[path_dir.rfind('/')+1:],
+                    "list_dirs": self._get_files_in_dir(path=path_dir[:path_dir.rfind('/')]),
+                    "previous_dir_title": '',
+                    "list_previous_dir": list(),
+                }
+                pprint(finder)
+                # find previous dir with files
+                while len(finder["list_previous_dir"]) == 0:
+                    print("One file or first in dir-----------")
+                    if finder["list_dirs"].index(finder["current_dir_title"]) == 0:
+                        print("---------------------------------")
+                        finder["current_dir"] = finder["current_dir"][:finder["current_dir"].rfind('/')]
+                        dir_previous = finder["current_dir"][finder["current_dir"].rfind('/')+1:]
+                        if dir_previous == 'logs':
+                            self._error = "(!!) Not files!!"
+                            return False
+                        finder["current_dir"] = finder["current_dir"][:finder["current_dir"].rfind('/')]
+                        list_dirs = self._get_files_in_dir(path=finder["current_dir"])
+                        finder["current_dir"] = finder["current_dir"] + '/' + list_dirs[list_dirs.index(dir_previous)-1]
+                        print(f'finder["current_dir"] = {finder["current_dir"]}')
+                    finder["list_dirs"] = self._get_files_in_dir(path=finder["current_dir"][:finder["current_dir"].rfind('/')])
+                    finder["previous_dir_title"] = finder["list_dirs"][finder["list_dirs"].index(finder["current_dir_title"])-1]
+                    finder["list_previous_dir"] = self._get_files_in_dir(
+                        path=finder["current_dir"][:finder["current_dir"].rfind('/')+1]+finder["previous_dir_title"])
+                    finder["current_dir_title"] = finder["previous_dir_title"]
+                    finder["current_dir"] = finder["current_dir"][:finder["current_dir"].rfind('/')+1] + finder["previous_dir_title"]
+                    pprint(f"finder >>>> {finder}")
+                    time.sleep(0.5)
+                return self._check_block_and_previous(block_current=path,
+                                                      block_previous=finder["current_dir"] + '/'
+                                                                     + finder["list_previous_dir"][-1])
+            else:
+                index_check_file = files.index(path[len(path_dir)+1:])
+                file_prev = path_dir + '/' + files[index_check_file-1]
+                return self._check_block_and_previous(block_current=path, block_previous=file_prev)
         except Exception as err:
             self._error = err
             return False
@@ -166,5 +200,22 @@ class BlockChainLogs:
         """
         files = os.listdir(path)
         return sorted([file for file in files])
+
+    def _check_block_and_previous(self, block_current: str = "", block_previous: str = "") -> bool:
+        """
+
+        :param block_current:
+        :param block_previous:
+        :return:
+        """
+        print(f"block_current = {block_current}")
+        print(f"block_previous = {block_previous}")
+        hash_prev_file = self.get_hash_file(file_name=block_previous)
+        with open(file=block_current, mode="rb") as file:
+            hash_prev_from_current_block = json.load(file)['hash']
+        if hash_prev_file == hash_prev_from_current_block:
+            return True
+        else:
+            return False
 
     # ###################### SERVICE___END ######################
