@@ -155,8 +155,9 @@ class BlockChainLogs:
                         path=dir_logs + '/' + current_year + '/' + current_month + '/' + current_day)
                     if len(list_files) > 0:
                         for current_file in list_files:
-                            result = self.check_block(file_path=dir_logs + '/' + current_year + '/' + current_month
-                                                                + '/' + current_day + '/' + current_file)
+                            full_path_current_file = dir_logs + '/' + current_year + '/' + current_month \
+                                                     + '/' + current_day + '/' + current_file
+                            result = self.check_block(file_path=full_path_current_file)
                             if result is False:
                                 return False
         return True
@@ -196,7 +197,7 @@ class BlockChainLogs:
             self._error = err
 
     @staticmethod
-    def _get_files_in_dir(path: str = "") -> list():
+    def _get_files_in_dir(path: str = "") -> list:
         """
         GET list files into dir.
         :param path:
@@ -206,7 +207,7 @@ class BlockChainLogs:
         return sorted([file for file in files if os.path.isfile(path + '/' + file)])
 
     @staticmethod
-    def _get_dirs_in_dir(path: str = "") -> list():
+    def _get_dirs_in_dir(path: str = "") -> list:
         """
         GET list dirs into dir.
         :param path:
@@ -264,9 +265,12 @@ class BlockChainLogs:
                     list_days = list_days[list_days.index(block_day)+1:]
                     block_day = None
                 for current_day in list_days:
-                    list_files = self._get_files_in_dir(path=dir_logs + '/' + current_year + '/' + current_month + '/' + current_day)
+                    full_path_current_file = dir_logs + '/' + current_year + '/' + current_month \
+                                             + '/' + current_day
+                    list_files = self._get_files_in_dir(path=full_path_current_file)
                     if len(list_files) > 0:
-                        return dir_logs + '/' + current_year + '/' + current_month + '/' + current_day + '/' + list_files[-1]
+                        return dir_logs + '/' + current_year + '/' + current_month + '/' + current_day \
+                               + '/' + list_files[-1]
         return ''
 
     # ###################### SERVICE___END ######################
