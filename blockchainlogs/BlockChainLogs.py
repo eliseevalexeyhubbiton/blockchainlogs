@@ -6,6 +6,9 @@ import datetime
 
 
 class BlockChainLogs:
+    """
+    Class for crate Logs into files with used BlockChain technologies.
+    """
     _debug = False
     _error = ""
     _dir_for_logs = ""
@@ -67,7 +70,7 @@ class BlockChainLogs:
 
     def add_block(self, data=None) -> None:
         """
-
+        ADD new block-file.
         :param data:
         :return:
         """
@@ -100,7 +103,7 @@ class BlockChainLogs:
 
     def check_block(self, file_path: str = "") -> bool:
         """
-
+        Check block-file.
         :param file_path:
         :return:
         """
@@ -137,12 +140,11 @@ class BlockChainLogs:
 
     def check_all_blocks(self) -> bool:
         """
-
+        Check all blocks.
         :return:
         """
         self._error = ''
         dir_logs = self._dir_for_logs
-        print(f"{dir_logs=}")
         list_years = self._get_dirs_in_dir(path=dir_logs)
         for current_year in list_years:
             list_month = self._get_dirs_in_dir(path=dir_logs + '/' + current_year)
@@ -153,7 +155,8 @@ class BlockChainLogs:
                         path=dir_logs + '/' + current_year + '/' + current_month + '/' + current_day)
                     if len(list_files) > 0:
                         for current_file in list_files:
-                            result = self.check_block(file_path=dir_logs + '/' + current_year + '/' + current_month + '/' + current_day + '/' + current_file)
+                            result = self.check_block(file_path=dir_logs + '/' + current_year + '/' + current_month
+                                                                + '/' + current_day + '/' + current_file)
                             if result is False:
                                 return False
         return True
@@ -177,7 +180,7 @@ class BlockChainLogs:
 
     def _check_or_create_dir(self, path: str = "") -> None:
         """
-
+        Check exist dir. If not dir then Create dir.
         :param path:
         :return:
         """
@@ -195,7 +198,7 @@ class BlockChainLogs:
     @staticmethod
     def _get_files_in_dir(path: str = "") -> list():
         """
-
+        GET list files into dir.
         :param path:
         :return:
         """
@@ -205,7 +208,7 @@ class BlockChainLogs:
     @staticmethod
     def _get_dirs_in_dir(path: str = "") -> list():
         """
-
+        GET list dirs into dir.
         :param path:
         :return:
         """
@@ -214,7 +217,7 @@ class BlockChainLogs:
 
     def _check_block_and_previous(self, block_current: str = "", block_previous: str = "") -> bool:
         """
-
+        Check block with previous.
         :param block_current:
         :param block_previous:
         :return:
@@ -231,6 +234,11 @@ class BlockChainLogs:
             return False
 
     def _get_previous_file_in_tree(self, path: str = '') -> str:
+        """
+        Find and GET previous block-file into tree dir logs.
+        :param path:
+        :return:
+        """
         self._error = ''
         dir_logs = path
         # block_name = dir_logs[dir_logs.rfind('/')+1:]
